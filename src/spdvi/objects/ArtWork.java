@@ -19,12 +19,13 @@ public class ArtWork implements Serializable {
     private String autor;
     private String imatge;
     
-    public ArtWork(String registre, String titol, String any, String format, String autor) {
+    public ArtWork(String registre, String titol, String any, String format, String autor, String image) {
         this.registre = registre;
         this.titol = titol;
         this.any = any;
         this.format = format;
         this.autor = autor;
+        this.imatge = image;
     }
    
     public String getRegistre() {

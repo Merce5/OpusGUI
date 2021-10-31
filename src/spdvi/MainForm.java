@@ -43,19 +43,22 @@ public class MainForm extends javax.swing.JFrame {
     public boolean update = false;
     public UpdateDialog up = new UpdateDialog(this, true);
     public DefaultListModel<ArtWork> artworksLstModel = new DefaultListModel<ArtWork>();
-    String imagesDirectory = System.getProperty("user.home") + "/AppData/Local/OpusList/images/";
+    public String imagePath = "src/spdvi/icons/no_image.jpg";
+    public String imagesDirectory = System.getProperty("user.home") + "\\AppData\\Local\\OpusList\\images\\";
     
     public MainForm() {
         initComponents();
         lstArtWork = new JList<>();
         scrArtWork.setViewportView(lstArtWork);
         lstArtWork.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            @Override
             public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
                 lstArtworksValueChanged(evt);
             }
         });
         
         lstArtWork.addMouseListener(new MouseAdapter() {
+            @Override
             public void mouseClicked(MouseEvent evt) {
                 if (evt.getClickCount() == 2) {
                     doubleClick();
@@ -65,7 +68,7 @@ public class MainForm extends javax.swing.JFrame {
         loadArtworks();
         
         try {
-            BufferedImage image = ImageIO.read(new File("src/spdvi/icons/no_image.jpg"));
+            BufferedImage image = ImageIO.read(new File("src\\spdvi\\icons\\no_image.jpg"));
             lblImage.setIcon(resizImageIcon(image));
         } catch(IOException ioe) {
             System.err.println("Error in ShowDialog");
@@ -85,6 +88,7 @@ public class MainForm extends javax.swing.JFrame {
         lblTitle = new javax.swing.JLabel();
         scrArtWork = new javax.swing.JScrollPane();
         lblImage = new javax.swing.JLabel();
+        btnSave = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         mniCreate = new javax.swing.JMenuItem();
@@ -104,6 +108,13 @@ public class MainForm extends javax.swing.JFrame {
         lblTitle.setText("Artwork manager");
 
         lblImage.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+
+        btnSave.setText("Save");
+        btnSave.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSaveActionPerformed(evt);
+            }
+        });
 
         jMenu1.setText("File");
 
@@ -147,8 +158,10 @@ public class MainForm extends javax.swing.JFrame {
                 .addGap(29, 29, 29)
                 .addComponent(scrArtWork, javax.swing.GroupLayout.PREFERRED_SIZE, 744, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(lblImage, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGap(19, 19, 19))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(btnSave, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(lblImage, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(13, 13, 13))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -159,7 +172,9 @@ public class MainForm extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(scrArtWork, javax.swing.GroupLayout.DEFAULT_SIZE, 259, Short.MAX_VALUE)
                     .addComponent(lblImage, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap(28, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(btnSave)
+                .addContainerGap(15, Short.MAX_VALUE))
         );
 
         pack();
@@ -168,23 +183,6 @@ public class MainForm extends javax.swing.JFrame {
     private void mniCreateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mniCreateActionPerformed
         ShowDialog sd = new ShowDialog(this, true);
         sd.setVisible(true);
-        try {
-            JsonWriter writer = new JsonWriter(new FileWriter(System.getProperty("user.home") + "/AppData/Local/OpusList/data/obres1.json"));
-            
-            for(ArtWork a : artworks) {
-                writer.beginObject();
-                writer.name("registre").value(a.getRegistre());
-                writer.name("titol").value(a.getTitol());
-                writer.name("any").value(a.getAny());
-                writer.name("format").value(a.getFormat());
-                writer.name("autor").value(a.getAutor());
-                writer.name("imatge").value(a.getImatge());
-                writer.endObject();
-            }
-        } catch (IOException ioe) {
-            System.err.println("Error in mniCreateActionPerformed");
-            System.err.println(ioe);
-        }
     }//GEN-LAST:event_mniCreateActionPerformed
 
     private void mniUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mniUpdateActionPerformed
@@ -192,16 +190,31 @@ public class MainForm extends javax.swing.JFrame {
         up.setVisible(true);
     }//GEN-LAST:event_mniUpdateActionPerformed
 
+    private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
+        try (JsonWriter writer = new JsonWriter(new FileWriter(System.getProperty("user.home") + "\\AppData\\Local\\OpusList\\data\\obres1.json"))){
+            
+            writer.setIndent("    ");
+            writeArtworks(writer);
+            writer.close();
+        } catch (IOException ioe) {
+            System.err.println("Error in mniCreateActionPerformed");
+            System.err.println(ioe);
+        }
+    }//GEN-LAST:event_btnSaveActionPerformed
+
     /**
      * @param args the command line arguments
      */
     private void lstArtworksValueChanged(javax.swing.event.ListSelectionEvent evt) {
         try {
-            BufferedImage image = ImageIO.read(new File(imagesDirectory + lstArtWork.getSelectedValue().getImatge()));
+            ArtWork a = (ArtWork) lstArtWork.getSelectedValue();
+            BufferedImage image = ImageIO.read(new File(a.getImatge()));
             lblImage.setIcon(resizImageIcon(image));
         } catch(IOException ioe) {
             System.err.println("Error in lstArtworksValueChanged");
             System.err.println(ioe);
+        } catch (NullPointerException npe) {
+            
         }
     }
     
@@ -236,11 +249,12 @@ public class MainForm extends javax.swing.JFrame {
     private void loadArtworks() {
         Gson gson = new Gson();
         try {
-            JsonReader reader = new JsonReader(new FileReader(System.getProperty("user.home") + "/AppData/Local/OpusList/data/obres.json"));
+            JsonReader reader = new JsonReader(new FileReader(System.getProperty("user.home") + "\\AppData\\Local\\OpusList\\data\\obres.json"));
             
             artworks = gson.fromJson(reader, LIST_OF_ARTWORK_TYPE);
             
             for(ArtWork a: artworks) {
+                a.setImatge(imagesDirectory + a.getImatge());
                 artworksLstModel.addElement(a);
             }
             lstArtWork.setModel(artworksLstModel);
@@ -248,6 +262,54 @@ public class MainForm extends javax.swing.JFrame {
             System.err.println("Error loading artworks");
         }
     }
+    
+    private void writeArtworks(JsonWriter writer) {
+        try {
+            writer.beginArray();
+            artworks.forEach(a -> {
+                writeArtwork(writer, a);
+            });
+            writer.endArray();
+        } catch (IOException ioe) {
+            System.err.println("Error in writeArtworks");
+            System.err.println(ioe);
+        }
+    }
+    
+    private void writeArtwork(JsonWriter writer, ArtWork a) {
+        try {
+            String userFolder = System.getProperty("user.home");
+            writer.beginObject();
+            writer.name("registre").value(a.getRegistre());
+            writer.name("titol").value(a.getTitol());
+            writer.name("any").value(a.getAny());
+            writer.name("format").value(a.getFormat());
+            writer.name("autor").value(a.getAutor());
+            String absolutePath = userFolder + "\\AppData\\Local\\OpusList\\images\\" + a.getRegistre()+ ".jpg";
+            BufferedImage bufferedImage = ImageIO.read(new File(a.getImatge()));
+            a.setImatge(a.getRegistre()+ ".jpg");
+            File outputImage = new File(absolutePath);
+            ImageIO.write(bufferedImage, "jpg", outputImage);
+            //File folder = new File(userFolder + "\\AppData\\Local\\OpusList\\images\\");
+            //findAllFilesInFolder(folder);
+            writer.name("imatge").value(a.getImatge());
+            writer.endObject();
+        } catch (IOException ioe) {
+            System.err.println("Error in writeArtwork");
+            System.err.println(ioe);
+        }
+    }
+    
+    /*public void findAllFilesInFolder(File folder) {
+        for (File file : folder.listFiles()) {
+            for (File f : deletedUsers) {
+                if (file.getName().equals(f.getName())) {
+                    f.delete();
+                }
+            }
+        }
+    }*/
+    
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
@@ -281,6 +343,7 @@ public class MainForm extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnSave;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JPopupMenu.Separator jSeparator1;

@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.DefaultListModel;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import spdvi.MainForm;
@@ -26,9 +27,6 @@ public class ShowDialog extends javax.swing.JDialog {
      */
     private final MainForm mainForm = (MainForm) this.getParent();
     private final String imagesDirectory = System.getProperty("user.home") + "/AppData/Local/OpusList/images/";
-
-    private String imagePath = "";
-
     private JFileChooser fileChooser;
 
     public ShowDialog(java.awt.Frame parent, boolean modal) {
@@ -36,9 +34,8 @@ public class ShowDialog extends javax.swing.JDialog {
         initComponents();
         if (mainForm.update) {
             loadArtwork();
-            btnSelectImage.setVisible(false);
         } else {
-            btnUpdate.setText("Insert");
+            btnEnter.setText("Insert");
             try {
                 BufferedImage image = ImageIO.read(new File("src/spdvi/icons/no_image.jpg"));
                 lblImage.setIcon(resizImageIcon(image));
@@ -69,7 +66,7 @@ public class ShowDialog extends javax.swing.JDialog {
         lblFormat = new javax.swing.JLabel();
         txtFormat = new javax.swing.JTextField();
         lblImage = new javax.swing.JLabel();
-        btnUpdate = new javax.swing.JButton();
+        btnEnter = new javax.swing.JButton();
         btnSelectImage = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
@@ -86,10 +83,10 @@ public class ShowDialog extends javax.swing.JDialog {
 
         lblImage.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
 
-        btnUpdate.setText("Update");
-        btnUpdate.addActionListener(new java.awt.event.ActionListener() {
+        btnEnter.setText("Update");
+        btnEnter.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnUpdateActionPerformed(evt);
+                btnEnterActionPerformed(evt);
             }
         });
 
@@ -126,7 +123,7 @@ public class ShowDialog extends javax.swing.JDialog {
                 .addGap(107, 107, 107))
             .addGroup(layout.createSequentialGroup()
                 .addGap(156, 156, 156)
-                .addComponent(btnUpdate, javax.swing.GroupLayout.PREFERRED_SIZE, 243, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(btnEnter, javax.swing.GroupLayout.PREFERRED_SIZE, 243, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -161,14 +158,14 @@ public class ShowDialog extends javax.swing.JDialog {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(btnSelectImage)
                         .addGap(39, 39, 39)))
-                .addComponent(btnUpdate)
+                .addComponent(btnEnter)
                 .addGap(43, 43, 43))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpdateActionPerformed
+    private void btnEnterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEnterActionPerformed
         if (mainForm.update) {
             String ref = txtRef.getText();
             DefaultListModel<ArtWork> lstModel = new DefaultListModel<ArtWork>();
@@ -179,30 +176,32 @@ public class ShowDialog extends javax.swing.JDialog {
                     a.setAny(txtYear.getText());
                     a.setFormat(txtFormat.getText());
                     a.setAutor(txtAuthor.getText());
+                    a.setImatge(mainForm.imagePath);
                 }
                 lstModel.addElement(a);
             }
             mainForm.lstArtWork.setModel(lstModel);
+            mainForm.update = false;
         } else {
-            ArtWork a = new ArtWork(txtRef.getText(), txtTitle.getText(), txtYear.getText(), txtFormat.getText(), txtAuthor.getText());
+            ArtWork a = new ArtWork(txtRef.getText(), txtTitle.getText(), txtYear.getText(), txtFormat.getText(), txtAuthor.getText(), mainForm.imagePath);
             mainForm.artworksLstModel.addElement(a);
             mainForm.artworks.add(a);
             mainForm.lstArtWork.setModel(mainForm.artworksLstModel);
             this.setVisible(false);
         }
-    }//GEN-LAST:event_btnUpdateActionPerformed
+    }//GEN-LAST:event_btnEnterActionPerformed
 
     private void btnSelectImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSelectImageActionPerformed
         fileChooser = new JFileChooser();
-
+        String imageName = "";
         int returnOption = fileChooser.showOpenDialog(this);
         if (returnOption == JFileChooser.APPROVE_OPTION) {
-            imagePath = fileChooser.getSelectedFile().getAbsolutePath();
+            mainForm.imagePath = fileChooser.getSelectedFile().getAbsolutePath();
         } else {
-            imagePath = "src/spdvi/icons/no_image.jpg";
+            mainForm.imagePath = "src/spdvi/icons/no_image.jpg";
         }
         try {
-            BufferedImage image = ImageIO.read(new File(imagePath));
+            BufferedImage image = ImageIO.read(new File(mainForm.imagePath));
             lblImage.setIcon(resizImageIcon(image));
         } catch(IOException ioe) {
             System.err.println("Error in btnSelectImage");
@@ -223,7 +222,8 @@ public class ShowDialog extends javax.swing.JDialog {
                 txtAuthor.setText(a.getAutor());
                 txtYear.setText(a.getAny());
                 txtFormat.setText(a.getFormat());
-                BufferedImage image = ImageIO.read(new File(imagesDirectory + a.getImatge()));
+                BufferedImage image = ImageIO.read(new File(a.getImatge()));
+                mainForm.imagePath = a.getImatge();
                 lblImage.setIcon(resizImageIcon(image));
                 mainForm.dobleclick = false;
             } else {
@@ -234,11 +234,12 @@ public class ShowDialog extends javax.swing.JDialog {
                         txtAuthor.setText(a.getAutor());
                         txtYear.setText(a.getAny());
                         txtFormat.setText(a.getFormat());
+                        BufferedImage image = ImageIO.read(new File(mainForm.imagesDirectory + a.getImatge()));
+                        lblImage.setIcon(resizImageIcon(image));
                         return;
                     }
                 }
             }
-            mainForm.update = false;
         } catch (IOException ioe) {
             System.err.println("Error in loadArtwork (ShowDialog)");
             System.err.println(ioe);
@@ -307,8 +308,8 @@ public class ShowDialog extends javax.swing.JDialog {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnEnter;
     private javax.swing.JButton btnSelectImage;
-    private javax.swing.JButton btnUpdate;
     private javax.swing.JLabel lblAuthor;
     private javax.swing.JLabel lblFormat;
     private javax.swing.JLabel lblImage;
