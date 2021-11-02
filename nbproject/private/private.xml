@@ -5,8 +5,9 @@
         <group>
             <file>file:/D:/1.Clase/Interficies/OposGUI/src/spdvi/dialogs/ShowDialog.java</file>
             <file>file:/D:/1.Clase/Interficies/OposGUI/src/spdvi/dialogs/UpdateDialog.java</file>
-            <file>file:/D:/1.Clase/Interficies/OposGUI/src/spdvi/objects/ArtWork.java</file>
+            <file>file:/D:/1.Clase/Interficies/OposGUI/src/spdvi/dialogs/WrongFileSelectedDialog.java</file>
             <file>file:/D:/1.Clase/Interficies/OposGUI/src/spdvi/MainForm.java</file>
+            <file>file:/D:/1.Clase/Interficies/OposGUI/src/spdvi/dialogs/DeleteDialog.java</file>
         </group>
     </open-files>
 </project-private>

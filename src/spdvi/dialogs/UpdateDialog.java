@@ -16,6 +16,7 @@ import spdvi.objects.ArtWork;
 public class UpdateDialog extends javax.swing.JDialog {
 
     public String reference = "";
+    private final MainForm mainForm = (MainForm) this.getParent();
 
     public UpdateDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
@@ -96,10 +97,10 @@ public class UpdateDialog extends javax.swing.JDialog {
 
     private void btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchActionPerformed
         reference = txtRef.getText();
-        MainForm mainForm = (MainForm)this.getParent();
         ShowDialog sd = new ShowDialog(mainForm, true);
         for (ArtWork a : mainForm.artworks) {
             if (a.getRegistre().equals(reference)) {
+                mainForm.imagePath = a.getImatge();
                 sd.setVisible(true);
                 return;
             }

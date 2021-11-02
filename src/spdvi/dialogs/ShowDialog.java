@@ -6,13 +6,9 @@ package spdvi.dialogs;
 
 import java.awt.Image;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import javax.imageio.ImageIO;
-import javax.swing.DefaultListModel;
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
-import javax.swing.JFileChooser;
+import javax.swing.*;
 import spdvi.MainForm;
 import spdvi.objects.ArtWork;
 
@@ -26,9 +22,7 @@ public class ShowDialog extends javax.swing.JDialog {
      * Creates new form ShowDialog
      */
     private final MainForm mainForm = (MainForm) this.getParent();
-    private final String imagesDirectory = System.getProperty("user.home") + "/AppData/Local/OpusList/images/";
     private JFileChooser fileChooser;
-
     public ShowDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
@@ -193,10 +187,15 @@ public class ShowDialog extends javax.swing.JDialog {
 
     private void btnSelectImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSelectImageActionPerformed
         fileChooser = new JFileChooser();
-        String imageName = "";
         int returnOption = fileChooser.showOpenDialog(this);
         if (returnOption == JFileChooser.APPROVE_OPTION) {
-            mainForm.imagePath = fileChooser.getSelectedFile().getAbsolutePath();
+            if (!fileChooser.getSelectedFile().getName().endsWith("jpg")) {
+                WrongFileSelectedDialog wfsd = new WrongFileSelectedDialog(mainForm, true);
+                wfsd.setVisible(true);
+                mainForm.imagePath = "src/spdvi/icons/no_image.jpg";
+            } else {
+                mainForm.imagePath = fileChooser.getSelectedFile().getAbsolutePath();
+            }
         } else {
             mainForm.imagePath = "src/spdvi/icons/no_image.jpg";
         }
@@ -234,7 +233,7 @@ public class ShowDialog extends javax.swing.JDialog {
                         txtAuthor.setText(a.getAutor());
                         txtYear.setText(a.getAny());
                         txtFormat.setText(a.getFormat());
-                        BufferedImage image = ImageIO.read(new File(mainForm.imagesDirectory + a.getImatge()));
+                        BufferedImage image = ImageIO.read(new File(a.getImatge()));
                         lblImage.setIcon(resizImageIcon(image));
                         return;
                     }

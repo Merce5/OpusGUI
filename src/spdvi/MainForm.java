@@ -22,6 +22,7 @@ import javax.imageio.ImageIO;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JList;
+import spdvi.dialogs.DeleteDialog;
 import spdvi.dialogs.ShowDialog;
 import spdvi.dialogs.UpdateDialog;
 import spdvi.objects.*;
@@ -88,11 +89,11 @@ public class MainForm extends javax.swing.JFrame {
         lblTitle = new javax.swing.JLabel();
         scrArtWork = new javax.swing.JScrollPane();
         lblImage = new javax.swing.JLabel();
-        btnSave = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
-        jMenu1 = new javax.swing.JMenu();
+        Save = new javax.swing.JMenu();
         mniCreate = new javax.swing.JMenuItem();
         mniUpdate = new javax.swing.JMenuItem();
+        mniSave = new javax.swing.JMenuItem();
         mniDelete = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
         mniExit = new javax.swing.JMenuItem();
@@ -100,8 +101,7 @@ public class MainForm extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Opos Manager");
         setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
-        setMinimumSize(new java.awt.Dimension(1100, 450));
-        setPreferredSize(new java.awt.Dimension(817, 400));
+        setPreferredSize(new java.awt.Dimension(1100, 500));
 
         lblTitle.setFont(new java.awt.Font("Georgia", 1, 48)); // NOI18N
         lblTitle.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -109,14 +109,7 @@ public class MainForm extends javax.swing.JFrame {
 
         lblImage.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
 
-        btnSave.setText("Save");
-        btnSave.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnSaveActionPerformed(evt);
-            }
-        });
-
-        jMenu1.setText("File");
+        Save.setText("File");
 
         mniCreate.setIcon(new javax.swing.ImageIcon(getClass().getResource("/spdvi/icons/createIcon.jpg"))); // NOI18N
         mniCreate.setText("Create");
@@ -125,7 +118,7 @@ public class MainForm extends javax.swing.JFrame {
                 mniCreateActionPerformed(evt);
             }
         });
-        jMenu1.add(mniCreate);
+        Save.add(mniCreate);
 
         mniUpdate.setIcon(new javax.swing.ImageIcon(getClass().getResource("/spdvi/icons/updateIcon.jpg"))); // NOI18N
         mniUpdate.setText("Update");
@@ -134,18 +127,32 @@ public class MainForm extends javax.swing.JFrame {
                 mniUpdateActionPerformed(evt);
             }
         });
-        jMenu1.add(mniUpdate);
+        Save.add(mniUpdate);
+
+        mniSave.setIcon(new javax.swing.ImageIcon(getClass().getResource("/spdvi/icons/guardar.jpg"))); // NOI18N
+        mniSave.setText("Save");
+        mniSave.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mniSaveActionPerformed(evt);
+            }
+        });
+        Save.add(mniSave);
 
         mniDelete.setIcon(new javax.swing.ImageIcon(getClass().getResource("/spdvi/icons/deleteIcon.jpg"))); // NOI18N
         mniDelete.setText("Delete");
-        jMenu1.add(mniDelete);
-        jMenu1.add(jSeparator1);
+        mniDelete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mniDeleteActionPerformed(evt);
+            }
+        });
+        Save.add(mniDelete);
+        Save.add(jSeparator1);
 
         mniExit.setIcon(new javax.swing.ImageIcon(getClass().getResource("/spdvi/icons/exitIcon.jpg"))); // NOI18N
         mniExit.setText("Exit");
-        jMenu1.add(mniExit);
+        Save.add(mniExit);
 
-        jMenuBar1.add(jMenu1);
+        jMenuBar1.add(Save);
 
         setJMenuBar(jMenuBar1);
 
@@ -158,9 +165,7 @@ public class MainForm extends javax.swing.JFrame {
                 .addGap(29, 29, 29)
                 .addComponent(scrArtWork, javax.swing.GroupLayout.PREFERRED_SIZE, 744, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(btnSave, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(lblImage, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(lblImage, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGap(13, 13, 13))
         );
         layout.setVerticalGroup(
@@ -172,9 +177,7 @@ public class MainForm extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(scrArtWork, javax.swing.GroupLayout.DEFAULT_SIZE, 259, Short.MAX_VALUE)
                     .addComponent(lblImage, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(btnSave)
-                .addContainerGap(15, Short.MAX_VALUE))
+                .addContainerGap(51, Short.MAX_VALUE))
         );
 
         pack();
@@ -190,9 +193,9 @@ public class MainForm extends javax.swing.JFrame {
         up.setVisible(true);
     }//GEN-LAST:event_mniUpdateActionPerformed
 
-    private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
+    private void mniSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mniSaveActionPerformed
         try (JsonWriter writer = new JsonWriter(new FileWriter(System.getProperty("user.home") + "\\AppData\\Local\\OpusList\\data\\obres1.json"))){
-            
+
             writer.setIndent("    ");
             writeArtworks(writer);
             writer.close();
@@ -200,7 +203,18 @@ public class MainForm extends javax.swing.JFrame {
             System.err.println("Error in mniCreateActionPerformed");
             System.err.println(ioe);
         }
-    }//GEN-LAST:event_btnSaveActionPerformed
+    }//GEN-LAST:event_mniSaveActionPerformed
+
+    private void mniDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mniDeleteActionPerformed
+        DeleteDialog dd = new DeleteDialog(this, true);
+        dd.setVisible(true);
+        DefaultListModel<ArtWork> lstModel = new DefaultListModel<ArtWork>();
+        for (ArtWork a: artworks) {
+            lstModel.addElement(a);
+        }
+        
+        lstArtWork.setModel(lstModel);
+    }//GEN-LAST:event_mniDeleteActionPerformed
 
     /**
      * @param args the command line arguments
@@ -249,7 +263,7 @@ public class MainForm extends javax.swing.JFrame {
     private void loadArtworks() {
         Gson gson = new Gson();
         try {
-            JsonReader reader = new JsonReader(new FileReader(System.getProperty("user.home") + "\\AppData\\Local\\OpusList\\data\\obres.json"));
+            JsonReader reader = new JsonReader(new FileReader(System.getProperty("user.home") + "\\AppData\\Local\\OpusList\\data\\obres1.json"));
             
             artworks = gson.fromJson(reader, LIST_OF_ARTWORK_TYPE);
             
@@ -343,8 +357,7 @@ public class MainForm extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnSave;
-    private javax.swing.JMenu jMenu1;
+    private javax.swing.JMenu Save;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JLabel lblImage;
@@ -352,6 +365,7 @@ public class MainForm extends javax.swing.JFrame {
     private javax.swing.JMenuItem mniCreate;
     private javax.swing.JMenuItem mniDelete;
     private javax.swing.JMenuItem mniExit;
+    private javax.swing.JMenuItem mniSave;
     private javax.swing.JMenuItem mniUpdate;
     private javax.swing.JScrollPane scrArtWork;
     // End of variables declaration//GEN-END:variables
