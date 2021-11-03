@@ -9,6 +9,7 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import spdvi.MainForm;
 import spdvi.objects.ArtWork;
 
@@ -22,7 +23,8 @@ public class ShowDialog extends javax.swing.JDialog {
      * Creates new form ShowDialog
      */
     private final MainForm mainForm = (MainForm) this.getParent();
-    private JFileChooser fileChooser;
+    private JFileChooser fileChooser = new JFileChooser();
+    
     public ShowDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
@@ -186,16 +188,11 @@ public class ShowDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_btnEnterActionPerformed
 
     private void btnSelectImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSelectImageActionPerformed
-        fileChooser = new JFileChooser();
+        fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Images", "JPG", "jpg", "jpeg"));
+        fileChooser.setAcceptAllFileFilterUsed(false);
         int returnOption = fileChooser.showOpenDialog(this);
         if (returnOption == JFileChooser.APPROVE_OPTION) {
-            if (!fileChooser.getSelectedFile().getName().endsWith("jpg")) {
-                WrongFileSelectedDialog wfsd = new WrongFileSelectedDialog(mainForm, true);
-                wfsd.setVisible(true);
-                mainForm.imagePath = "src/spdvi/icons/no_image.jpg";
-            } else {
-                mainForm.imagePath = fileChooser.getSelectedFile().getAbsolutePath();
-            }
+            mainForm.imagePath = fileChooser.getSelectedFile().getAbsolutePath(); 
         } else {
             mainForm.imagePath = "src/spdvi/icons/no_image.jpg";
         }
@@ -274,12 +271,7 @@ public class ShowDialog extends javax.swing.JDialog {
          * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
          */
         try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ClassNotFoundException ex) {
             java.util.logging.Logger.getLogger(ShowDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {

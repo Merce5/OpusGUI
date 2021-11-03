@@ -3,6 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
 package spdvi;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
@@ -22,6 +23,7 @@ import javax.imageio.ImageIO;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JList;
+import javax.swing.UIManager;
 import spdvi.dialogs.DeleteDialog;
 import spdvi.dialogs.ShowDialog;
 import spdvi.dialogs.UpdateDialog;
@@ -42,13 +44,14 @@ public class MainForm extends javax.swing.JFrame {
     public JList<ArtWork> lstArtWork;
     public boolean dobleclick = false;
     public boolean update = false;
-    public UpdateDialog up = new UpdateDialog(this, true);
+    public UpdateDialog up;
     public DefaultListModel<ArtWork> artworksLstModel = new DefaultListModel<ArtWork>();
     public String imagePath = "src/spdvi/icons/no_image.jpg";
     public String imagesDirectory = System.getProperty("user.home") + "\\AppData\\Local\\OpusList\\images\\";
     
     public MainForm() {
-        initComponents();
+        initComponents(); 
+        up = new UpdateDialog(this, true); 
         lstArtWork = new JList<>();
         scrArtWork.setViewportView(lstArtWork);
         lstArtWork.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
@@ -98,10 +101,15 @@ public class MainForm extends javax.swing.JFrame {
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
         mniExit = new javax.swing.JMenuItem();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("Opos Manager");
         setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         setPreferredSize(new java.awt.Dimension(1100, 500));
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+        });
 
         lblTitle.setFont(new java.awt.Font("Georgia", 1, 48)); // NOI18N
         lblTitle.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -150,6 +158,11 @@ public class MainForm extends javax.swing.JFrame {
 
         mniExit.setIcon(new javax.swing.ImageIcon(getClass().getResource("/spdvi/icons/exitIcon.jpg"))); // NOI18N
         mniExit.setText("Exit");
+        mniExit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mniExitActionPerformed(evt);
+            }
+        });
         Save.add(mniExit);
 
         jMenuBar1.add(Save);
@@ -177,7 +190,7 @@ public class MainForm extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(scrArtWork, javax.swing.GroupLayout.DEFAULT_SIZE, 259, Short.MAX_VALUE)
                     .addComponent(lblImage, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap(51, Short.MAX_VALUE))
+                .addContainerGap(21, Short.MAX_VALUE))
         );
 
         pack();
@@ -194,7 +207,7 @@ public class MainForm extends javax.swing.JFrame {
     }//GEN-LAST:event_mniUpdateActionPerformed
 
     private void mniSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mniSaveActionPerformed
-        try (JsonWriter writer = new JsonWriter(new FileWriter(System.getProperty("user.home") + "\\AppData\\Local\\OpusList\\data\\obres1.json"))){
+        try (JsonWriter writer = new JsonWriter(new FileWriter(System.getProperty("user.home") + "\\AppData\\Local\\OpusList\\data\\obres.json"))){
 
             writer.setIndent("    ");
             writeArtworks(writer);
@@ -215,6 +228,14 @@ public class MainForm extends javax.swing.JFrame {
         
         lstArtWork.setModel(lstModel);
     }//GEN-LAST:event_mniDeleteActionPerformed
+
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        this.dispose();
+    }//GEN-LAST:event_formWindowClosing
+
+    private void mniExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mniExitActionPerformed
+        
+    }//GEN-LAST:event_mniExitActionPerformed
 
     /**
      * @param args the command line arguments
@@ -263,7 +284,7 @@ public class MainForm extends javax.swing.JFrame {
     private void loadArtworks() {
         Gson gson = new Gson();
         try {
-            JsonReader reader = new JsonReader(new FileReader(System.getProperty("user.home") + "\\AppData\\Local\\OpusList\\data\\obres1.json"));
+            JsonReader reader = new JsonReader(new FileReader(System.getProperty("user.home") + "\\AppData\\Local\\OpusList\\data\\obres.json"));
             
             artworks = gson.fromJson(reader, LIST_OF_ARTWORK_TYPE);
             
@@ -279,18 +300,28 @@ public class MainForm extends javax.swing.JFrame {
     
     private void writeArtworks(JsonWriter writer) {
         try {
+            ArrayList<ArtWork> newArtworks = new ArrayList<>();
             writer.beginArray();
             artworks.forEach(a -> {
-                writeArtwork(writer, a);
+                writeArtwork(writer, a, newArtworks);
             });
             writer.endArray();
+            File folder = new File(System.getProperty("user.home") + "\\AppData\\Local\\OpusList\\images\\");
+            findAllFilesInFolder(folder);
+            artworks = newArtworks;
+            DefaultListModel<ArtWork> listModel = new DefaultListModel<>();
+            for (ArtWork a: artworks) {
+                a.setImatge(imagesDirectory + a.getImatge());
+                listModel.addElement(a);
+            }
+            lstArtWork.setModel(listModel);
         } catch (IOException ioe) {
             System.err.println("Error in writeArtworks");
             System.err.println(ioe);
         }
     }
     
-    private void writeArtwork(JsonWriter writer, ArtWork a) {
+    private void writeArtwork(JsonWriter writer, ArtWork a, ArrayList<ArtWork> newArtworks) {
         try {
             String userFolder = System.getProperty("user.home");
             writer.beginObject();
@@ -304,25 +335,31 @@ public class MainForm extends javax.swing.JFrame {
             a.setImatge(a.getRegistre()+ ".jpg");
             File outputImage = new File(absolutePath);
             ImageIO.write(bufferedImage, "jpg", outputImage);
-            //File folder = new File(userFolder + "\\AppData\\Local\\OpusList\\images\\");
-            //findAllFilesInFolder(folder);
             writer.name("imatge").value(a.getImatge());
             writer.endObject();
+            newArtworks.add(a);
         } catch (IOException ioe) {
             System.err.println("Error in writeArtwork");
             System.err.println(ioe);
         }
     }
     
-    /*public void findAllFilesInFolder(File folder) {
+    public void findAllFilesInFolder(File folder) {
+        ArrayList<String> goodFiles = new ArrayList<>();
         for (File file : folder.listFiles()) {
-            for (File f : deletedUsers) {
-                if (file.getName().equals(f.getName())) {
-                    f.delete();
+            for (ArtWork a: artworks) {
+                if (file.getName().equals(a.getImatge())) {
+                    goodFiles.add(file.getName());
                 }
             }
         }
-    }*/
+        
+        for (File file: folder.listFiles()) {
+            if (!goodFiles.contains(file.getName())) {
+                file.delete();
+            }
+        }
+    }
     
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
@@ -331,12 +368,7 @@ public class MainForm extends javax.swing.JFrame {
          * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
          */
         try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ClassNotFoundException ex) {
             java.util.logging.Logger.getLogger(MainForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
