@@ -4,7 +4,7 @@
  */
 package spdvi;
 
-import com.google.gson.Gson;
+import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.*;
 import java.awt.Image;
@@ -21,28 +21,39 @@ import spdvi.objects.*;
  *
  * @author merce
  */
+//En el MainForm es donde se va a hacer toda la relación directa con el json y a través de él se comunicarán los dialogs entre si
 public class MainForm extends javax.swing.JFrame {
-
-    /**
-     * Creates new form MainForm
-     */
-    private static final java.lang.reflect.Type LIST_OF_ARTWORK_TYPE = new TypeToken<List<ArtWork>>() {
-    }.getType();
-
+    
+    //Declaramos el TypeToken para poder acceder a él en el JsonReader
+    private static final java.lang.reflect.Type LIST_OF_ARTWORK_TYPE = new TypeToken<List<ArtWork>>() {}.getType();
+    
+    //Declaramos como publicos el ArrayList de artworks  y el JList para poder acceder a ellos desde los dialogs
     public ArrayList<ArtWork> artworks;
     public JList<ArtWork> lstArtWork;
+    
+    //Declaramos las booleanas que detectaran la actividad que estamos realizando en cada momento
+    //Si estamos haciendo doble clck, actualizando o saliendo del programa
     public boolean dobleclick = false;
     public boolean update = false;
     private boolean exiting = false;
+    
+    //Declaramos el UpdateDialog para poder acceder a él desde el ShowDialog mediante el mainForm
     public UpdateDialog up;
+    
+    //Declaramos el DefaultListModel para poder acceder a él desde el ShowDialog
     public DefaultListModel<ArtWork> artworksLstModel = new DefaultListModel<ArtWork>();
+    
+    //La variable imagePath es la que usaremos siempre a la hora de acceder a las imagenes
     public String imagePath = "src/spdvi/icons/no_image.jpg";
+    
+    //Declaramos las strings de las rutas de los directorios que usaremos durante todo el programa
     private String userFolder = System.getProperty("user.home");
     public String imagesDirectory = userFolder + "\\AppData\\Local\\OpusList\\images\\";
     private String jsonDirectory = userFolder + "\\AppData\\Local\\OpusList\\data\\obres.json";
 
     public MainForm() {
         initComponents();
+        //Inicializamos el JList, lo relacionamos con el scrollPane y le añadimos el selectionListener para detectar cuando se cambia el valor
         lstArtWork = new JList<>();
         scrArtWork.setViewportView(lstArtWork);
         lstArtWork.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
@@ -51,7 +62,7 @@ public class MainForm extends javax.swing.JFrame {
                 lstArtworksValueChanged(evt);
             }
         });
-
+        //Declaramos el mouseListener sobre el JList para saber cuando hacmos doble click encima de un objeto selecionado para abrir el showDialog
         lstArtWork.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent evt) {
@@ -60,7 +71,7 @@ public class MainForm extends javax.swing.JFrame {
                 }
             }
         });
-
+        //Cuando se inicia el programa, el label donde se colocan las imagenes por defecto obtiene una foto llamada no_image.jpg
         try {
             BufferedImage image = ImageIO.read(new File("src\\spdvi\\icons\\no_image.jpg"));
             lblImage.setIcon(resizImageIcon(image));
@@ -189,49 +200,84 @@ public class MainForm extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    //Action listener del menu item Create
     private void mniCreateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mniCreateActionPerformed
         ShowDialog sd = new ShowDialog(this, true);
+        //Abrimos el ShowDialog
         sd.setVisible(true);
     }//GEN-LAST:event_mniCreateActionPerformed
-
+    //Action listener del menu item Update
     private void mniUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mniUpdateActionPerformed
         update = true;
         up = new UpdateDialog(this, true);
+        //Antes de abrir el ShowDialog abrimos el UpdateDialog
         up.setVisible(true);
         update = false;
     }//GEN-LAST:event_mniUpdateActionPerformed
 
+    //Action listener del menu item Save
     private void mniSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mniSaveActionPerformed
         SaveDialog sd = new SaveDialog(this, true);
-        if(!exiting) {
+        if (!exiting) {
+            //Para que cuando estemos saliendo no nos pida confirmación 2 veces, ni se guarde 2 veces
             sd.setVisible(true);
         }
-        
+
+        //Si queremos guardar desde el SaveDialog o desde el SaveExitDialog se ejecuta
         if (sd.action || exiting) {
-            try ( JsonWriter writer = new JsonWriter(new FileWriter(jsonDirectory))) {
-                writer.setIndent("    ");
-                writeArtworks(writer);
-                writer.close();
+            try (Writer writer = new FileWriter(jsonDirectory)) {
+                for (ArtWork a : artworks) {
+                    //Declaramos el sitio donde queremos guardar la imagen
+                    String absolutePath = imagesDirectory + a.getRegistre() + ".jpg";
+                    //Creamos la imagen que teniamos guardada en la obra
+                    BufferedImage bufferedImage = ImageIO.read(new File(a.getImatge()));
+                    //Como ya no tenemos que utilizar la ruta completa y cuando escriba en el json solo quiero guardar el nombre.jpg
+                    //Hago un set de la imagen de la obra y así se escribirá con el gson.toJson
+                    a.setImatge(a.getRegistre() + ".jpg");
+                    //Creamos el archivo donde se tiene que guardar la foto
+                    File outputImage = new File(absolutePath);
+                    //Escribimos la imagen que hemos generado antes en formato jpg en el archivo que hemos creado
+                    ImageIO.write(bufferedImage, "jpg", outputImage);
+                }
+                //Escribimos la lista de obras en el json
+                Gson gson = new GsonBuilder().create();
+                gson.toJson(artworks, writer);
+                
+                //Eliminamos las fotos que no usemos que se encuentren en la carpeta de AppData/Local/OpusList/images
+                File folder = new File(imagesDirectory);
+                findAllFilesInFolder(folder);
+                
+                //Esta parte solo es para cuando guardamos sin salir, es decir querramos hacer más cambios, con anterioridad
+                //le hemos quitado la extensión a las imagenes para que se escriban en el json sin ella
+                //pero si tenemos que seguir trabajando necesitamos esa extensión así que simplemente se la volvemos a cargar
+                for (ArtWork a : artworks) {
+                    a.setImatge(imagesDirectory + a.getImatge());
+                }
+
             } catch (IOException ioe) {
-                System.err.println("Error in mniCreateActionPerformed");
+                System.err.println("Error in mniSaveActionPerformed");
                 System.err.println(ioe);
             }
         }
     }//GEN-LAST:event_mniSaveActionPerformed
 
+    //Método que llama al DeleteDialog
     private void mniDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mniDeleteActionPerformed
         DeleteDialog dd = new DeleteDialog(this, true);
         dd.setVisible(true);
     }//GEN-LAST:event_mniDeleteActionPerformed
 
+    //Cuando cerramos la ventana en lugar de cerrarse se activa el siguiente método
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         exitOnClose();
     }//GEN-LAST:event_formWindowClosing
 
+    //Cuando pulsamos el botón cerrar primero ejecuta el siguiente método
     private void mniExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mniExitActionPerformed
         exitOnClose();
     }//GEN-LAST:event_mniExitActionPerformed
 
+    //Cuando se abre el programa se carga a través de Gson el json dentro de un array
     private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
         Gson gson = new Gson();
         try {
@@ -253,9 +299,11 @@ public class MainForm extends javax.swing.JFrame {
     /**
      * @param args the command line arguments
      */
+    //Método que se ejecuta cuando el usuario quiere salir del programa
     private void exitOnClose() {
         Gson gson = new Gson();
         try {
+            //Vuelve a leer el documento y lo carga en un array para compararla al array de los artworks
             JsonReader reader = new JsonReader(new FileReader(jsonDirectory));
 
             ArrayList<ArtWork> comparar = gson.fromJson(reader, LIST_OF_ARTWORK_TYPE);
@@ -264,42 +312,52 @@ public class MainForm extends javax.swing.JFrame {
                 a.setImatge(imagesDirectory + a.getImatge());
             }
 
+            //Si los dos arrays son de tamaño diferente si o si ha habido algún cambio así que se ejecuta el método saveOnExit
             if (comparar.size() != artworks.size()) {
                 saveOnExit();
             } else {
-                for(int i = 0; i < comparar.size(); i++) {
+                for (int i = 0; i < comparar.size(); i++) {
+                    //Si los objetos no son iguales en la misma posición quiere decir que ha habido cambios y no se han guardado
                     if (!comparar.get(i).toString().equals(artworks.get(i).toString())) {
                         saveOnExit();
+                        //Una vez se ejecuta el save on exit no necesitamos que se haga más veces
                         return;
                     }
                 }
+                //Si no entra en el return anterior quiere decir que o está todo guardado o ya hemos salido del programa 
+                //así que se hace el this.dispose para finalizarlo todo
                 this.dispose();
             }
         } catch (FileNotFoundException fnfe) {
             System.err.println("Error loading artworks");
         }
     }
-    
+
+    //Abre el dialog SaveExitDialog para que el usuario elija que quiere hacer
     private void saveOnExit() {
         SaveExitDialog sed = new SaveExitDialog(this, true);
         sed.setVisible(true);
-        
-        switch(sed.action) {
+
+        //Dependiendo de la opción del usuario solo se cancelará el exit y el save
+        switch (sed.action) {
             case 0 -> {
                 return;
             }
+            //Se guardará y se cerrará
             case 1 -> {
                 exiting = true;
                 mniSave.doClick();
                 this.dispose();
                 return;
             }
+            //Se cerrará sin guardar
             case 2 -> {
                 this.dispose();
             }
         }
     }
-    
+
+    //Metodo que recoge el evento de valueChanged el lstArtworks (Se cambia el icono del label)
     private void lstArtworksValueChanged(javax.swing.event.ListSelectionEvent evt) {
         try {
             ArtWork a = (ArtWork) lstArtWork.getSelectedValue();
@@ -313,8 +371,8 @@ public class MainForm extends javax.swing.JFrame {
         }
     }
 
+    //Se hace el resize del icono
     private ImageIcon resizImageIcon(BufferedImage originalImage) {
-
         int desiredHeight = 0;
         int desiredWidth = 0;
         float aspectRatio = (float) originalImage.getWidth() / originalImage.getHeight();
@@ -334,61 +392,22 @@ public class MainForm extends javax.swing.JFrame {
         return icon;
     }
 
+    //Acción que se activa si hacemos doble click
     private void doubleClick() {
+        //Activa los boolean que necesitamos para trabajar en el ShowDialog
         dobleclick = true;
         update = true;
+        //Abre el ShowDialog
         ShowDialog sd = new ShowDialog(this, true);
         sd.setVisible(true);
+        //Cuando finaliza se vuelven a setear en false para que no haya conflictos
         dobleclick = false;
         update = false;
     }
 
-    private void writeArtworks(JsonWriter writer) {
-        try {
-            ArrayList<ArtWork> newArtworks = new ArrayList<>();
-            writer.beginArray();
-            artworks.forEach(a -> {
-                writeArtwork(writer, a, newArtworks);
-            });
-            writer.endArray();
-            File folder = new File(imagesDirectory);
-            findAllFilesInFolder(folder);
-            artworks = newArtworks;
-            DefaultListModel<ArtWork> listModel = new DefaultListModel<>();
-            for (ArtWork a : artworks) {
-                a.setImatge(imagesDirectory + a.getImatge());
-                listModel.addElement(a);
-            }
-            lstArtWork.setModel(listModel);
-        } catch (IOException ioe) {
-            System.err.println("Error in writeArtworks");
-            System.err.println(ioe);
-        }
-    }
-
-    private void writeArtwork(JsonWriter writer, ArtWork a, ArrayList<ArtWork> newArtworks) {
-        try {
-            writer.beginObject();
-            writer.name("registre").value(a.getRegistre());
-            writer.name("titol").value(a.getTitol());
-            writer.name("any").value(a.getAny());
-            writer.name("format").value(a.getFormat());
-            writer.name("autor").value(a.getAutor());
-            String absolutePath = imagesDirectory + a.getRegistre() + ".jpg";
-            BufferedImage bufferedImage = ImageIO.read(new File(a.getImatge()));
-            a.setImatge(a.getRegistre() + ".jpg");
-            File outputImage = new File(absolutePath);
-            ImageIO.write(bufferedImage, "jpg", outputImage);
-            writer.name("imatge").value(a.getImatge());
-            writer.endObject();
-            newArtworks.add(a);
-        } catch (IOException ioe) {
-            System.err.println("Error in writeArtwork");
-            System.err.println(ioe);
-        }
-    }
-
     public void findAllFilesInFolder(File folder) {
+        //Recorre la carpeta donde se guardan las fotos y guarda el nombre de las fotos que usan los usuarios 
+        //en un array string para que sea más fácil la comparación
         ArrayList<String> goodFiles = new ArrayList<>();
         for (File file : folder.listFiles()) {
             for (ArtWork a : artworks) {
@@ -398,6 +417,7 @@ public class MainForm extends javax.swing.JFrame {
             }
         }
 
+        //Recorre la carpeta otra vez y borra todos los archivos que no se encuentren dentro del array de las imaganes que usamos
         for (File file : folder.listFiles()) {
             if (!goodFiles.contains(file.getName())) {
                 file.delete();

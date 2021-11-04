@@ -13,6 +13,7 @@ public class SaveExitDialog extends javax.swing.JDialog {
     /**
      * Creates new form SaveExitDialog
      */
+    //La opción que elije el usuario irá directamente relacionada con este int para poder recuperarlo en el mainForm
     public int action = 0;
     public SaveExitDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);

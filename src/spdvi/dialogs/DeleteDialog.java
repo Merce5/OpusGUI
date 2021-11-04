@@ -18,23 +18,25 @@ import spdvi.objects.ArtWork;
  * @author merce
  */
 public class DeleteDialog extends javax.swing.JDialog {
-
-    /**
-     * Creates new form DeleteDialog
-     */
-    private final MainForm mainForm = (MainForm) this.getParent();
-    JComboBox<ArtWork> cmbArtwork;
+    //Declaramos el MainForm para poder acceder a él
+    private final MainForm mainForm;
+    //Declaramos el comboBox a mano para que sea de ArtWork y no de String
+    private JComboBox<ArtWork> cmbArtwork;
     public DeleteDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
+        //Inicializamos el mainForm
+        mainForm = (MainForm) this.getParent();
+        //Inicializamos el cmbArtwork
         cmbArtwork = new JComboBox<ArtWork>();
-        jScrollPane1.setViewportView(cmbArtwork);
+        //Hacemos que el scrollPane sea el que detecte las acciones que se producen para el cmbArtwork
+        scrArtworks.setViewportView(cmbArtwork);
+        //Le añadimos el listener al cmbArtwork
         cmbArtwork.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cmbArtworkActionPerformed(evt);
             }
         });
-        loadArtworks();
     }
 
     /**
@@ -49,9 +51,14 @@ public class DeleteDialog extends javax.swing.JDialog {
         btnDelete = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
         lblImage = new javax.swing.JLabel();
-        jScrollPane1 = new javax.swing.JScrollPane();
+        scrArtworks = new javax.swing.JScrollPane();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowOpened(java.awt.event.WindowEvent evt) {
+                formWindowOpened(evt);
+            }
+        });
 
         btnDelete.setText("Delete");
         btnDelete.addActionListener(new java.awt.event.ActionListener() {
@@ -74,7 +81,7 @@ public class DeleteDialog extends javax.swing.JDialog {
                 .addGap(61, 61, 61)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                     .addComponent(jLabel1)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 428, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(scrArtworks, javax.swing.GroupLayout.PREFERRED_SIZE, 428, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnDelete, javax.swing.GroupLayout.PREFERRED_SIZE, 165, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 66, Short.MAX_VALUE)
                 .addComponent(lblImage, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -86,7 +93,7 @@ public class DeleteDialog extends javax.swing.JDialog {
                 .addGap(49, 49, 49)
                 .addComponent(jLabel1)
                 .addGap(31, 31, 31)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(scrArtworks, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(btnDelete)
                 .addGap(0, 0, Short.MAX_VALUE))
@@ -100,19 +107,39 @@ public class DeleteDialog extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
-        ArtWork a = (ArtWork) cmbArtwork.getSelectedItem();    
+        ArtWork a = (ArtWork) cmbArtwork.getSelectedItem();   
+        //Este ArrayList nos hará de soporte para que a la hora de hacer el add no nos de un changingValueException (o algo así se llamaba el error)
         ArrayList<ArtWork> auxList = new ArrayList<>();
+        //Creamos un nuevo lstModel sobre el que trabajaremos para después asignarlo al lstModel principal
         DefaultListModel<ArtWork> lstModel = new DefaultListModel<ArtWork>();
+        //Creamos un nuevo cmbModel para poder actualizar el scrArtworks en tiempo real
+        DefaultComboBoxModel<ArtWork> cmbModel = new DefaultComboBoxModel<>();
         mainForm.artworks.remove(a);
+        //Actualizamos el model y la lista de refuerzo con todos los objetos menos los borrados
         for(ArtWork art: mainForm.artworks) {
             auxList.add(art);
             lstModel.addElement(art);
+            cmbModel.addElement(art);
         }
+        //Actualitzamos las variables principales del mainForm con las auxiliares que hemos utilizado
         mainForm.artworks = auxList;
         mainForm.artworksLstModel = lstModel;
         mainForm.lstArtWork.setModel(mainForm.artworksLstModel);
-        loadArtworks();
+        //Actualitzam el cmbArtwork
+        cmbArtwork.setModel(cmbModel);
     }//GEN-LAST:event_btnDeleteActionPerformed
+
+    private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
+        DefaultListModel<ArtWork> newList = new DefaultListModel<>();
+        DefaultComboBoxModel<ArtWork> cmbModel = new DefaultComboBoxModel<>();
+        for(ArtWork art : mainForm.artworks) {
+            cmbModel.addElement(art);
+            newList.addElement(art);
+        }
+        mainForm.lstArtWork.setModel(newList);
+        cmbArtwork.setModel(cmbModel);
+    }//GEN-LAST:event_formWindowOpened
+    //Action listener para cuando cambiamos de objeto seleccionado (para cambiar el icono del label)
     private void cmbArtworkActionPerformed(java.awt.event.ActionEvent evt) {                                           
         for(ArtWork a: mainForm.artworks) {
             if(a.toString().equals(cmbArtwork.getSelectedItem().toString())) {
@@ -126,20 +153,9 @@ public class DeleteDialog extends javax.swing.JDialog {
             }   
         }
     }      
-
-    private void loadArtworks() {
-        DefaultListModel<ArtWork> newList = new DefaultListModel<>();
-        DefaultComboBoxModel<ArtWork> cmbModel = new DefaultComboBoxModel<>();
-        for(ArtWork art : mainForm.artworks) {
-            cmbModel.addElement(art);
-            newList.addElement(art);
-        }
-        mainForm.lstArtWork.setModel(newList);
-        cmbArtwork.setModel(cmbModel);
-    }
     
+    //Método que reescala la imagen dependiendo del tamaño del label
     private ImageIcon resizImageIcon(BufferedImage originalImage) {
-
         int desiredHeight = 0;
         int desiredWidth = 0;
         float aspectRatio = (float) originalImage.getWidth() / originalImage.getHeight();
@@ -198,7 +214,7 @@ public class DeleteDialog extends javax.swing.JDialog {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnDelete;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel lblImage;
+    private javax.swing.JScrollPane scrArtworks;
     // End of variables declaration//GEN-END:variables
 }

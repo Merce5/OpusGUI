@@ -13,6 +13,8 @@ public class SaveDialog extends javax.swing.JDialog {
     /**
      * Creates new form SaveDialog
      */
+    //Esta variable manejará la opción que ha elegido el usuario para 
+    //después ser recogida por el mainForm para saber si guardar el contenido o no
     public boolean action = false;
     public SaveDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
