@@ -6,27 +6,15 @@ package spdvi;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
+import com.google.gson.stream.*;
 import java.awt.Image;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.*;
+import java.util.*;
 import javax.imageio.ImageIO;
-import javax.swing.DefaultListModel;
-import javax.swing.ImageIcon;
-import javax.swing.JList;
-import javax.swing.UIManager;
-import spdvi.dialogs.DeleteDialog;
-import spdvi.dialogs.ShowDialog;
-import spdvi.dialogs.UpdateDialog;
+import javax.swing.*;
+import spdvi.dialogs.*;
 import spdvi.objects.*;
 
 /**
@@ -38,20 +26,23 @@ public class MainForm extends javax.swing.JFrame {
     /**
      * Creates new form MainForm
      */
-    private static final java.lang.reflect.Type LIST_OF_ARTWORK_TYPE = new TypeToken<List<ArtWork>>() {}.getType();
-    
+    private static final java.lang.reflect.Type LIST_OF_ARTWORK_TYPE = new TypeToken<List<ArtWork>>() {
+    }.getType();
+
     public ArrayList<ArtWork> artworks;
     public JList<ArtWork> lstArtWork;
     public boolean dobleclick = false;
     public boolean update = false;
+    private boolean exiting = false;
     public UpdateDialog up;
     public DefaultListModel<ArtWork> artworksLstModel = new DefaultListModel<ArtWork>();
     public String imagePath = "src/spdvi/icons/no_image.jpg";
-    public String imagesDirectory = System.getProperty("user.home") + "\\AppData\\Local\\OpusList\\images\\";
-    
+    private String userFolder = System.getProperty("user.home");
+    public String imagesDirectory = userFolder + "\\AppData\\Local\\OpusList\\images\\";
+    private String jsonDirectory = userFolder + "\\AppData\\Local\\OpusList\\data\\obres.json";
+
     public MainForm() {
-        initComponents(); 
-        up = new UpdateDialog(this, true); 
+        initComponents();
         lstArtWork = new JList<>();
         scrArtWork.setViewportView(lstArtWork);
         lstArtWork.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
@@ -60,7 +51,7 @@ public class MainForm extends javax.swing.JFrame {
                 lstArtworksValueChanged(evt);
             }
         });
-        
+
         lstArtWork.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent evt) {
@@ -69,12 +60,11 @@ public class MainForm extends javax.swing.JFrame {
                 }
             }
         });
-        loadArtworks();
-        
+
         try {
             BufferedImage image = ImageIO.read(new File("src\\spdvi\\icons\\no_image.jpg"));
             lblImage.setIcon(resizImageIcon(image));
-        } catch(IOException ioe) {
+        } catch (IOException ioe) {
             System.err.println("Error in ShowDialog");
             System.err.println(ioe);
         }
@@ -104,10 +94,13 @@ public class MainForm extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("Opos Manager");
         setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
-        setPreferredSize(new java.awt.Dimension(1100, 500));
+        setPreferredSize(new java.awt.Dimension(1100, 425));
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 formWindowClosing(evt);
+            }
+            public void windowOpened(java.awt.event.WindowEvent evt) {
+                formWindowOpened(evt);
             }
         });
 
@@ -203,56 +196,123 @@ public class MainForm extends javax.swing.JFrame {
 
     private void mniUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mniUpdateActionPerformed
         update = true;
+        up = new UpdateDialog(this, true);
         up.setVisible(true);
+        update = false;
     }//GEN-LAST:event_mniUpdateActionPerformed
 
     private void mniSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mniSaveActionPerformed
-        try (JsonWriter writer = new JsonWriter(new FileWriter(System.getProperty("user.home") + "\\AppData\\Local\\OpusList\\data\\obres.json"))){
-
-            writer.setIndent("    ");
-            writeArtworks(writer);
-            writer.close();
-        } catch (IOException ioe) {
-            System.err.println("Error in mniCreateActionPerformed");
-            System.err.println(ioe);
+        SaveDialog sd = new SaveDialog(this, true);
+        if(!exiting) {
+            sd.setVisible(true);
+        }
+        
+        if (sd.action || exiting) {
+            try ( JsonWriter writer = new JsonWriter(new FileWriter(jsonDirectory))) {
+                writer.setIndent("    ");
+                writeArtworks(writer);
+                writer.close();
+            } catch (IOException ioe) {
+                System.err.println("Error in mniCreateActionPerformed");
+                System.err.println(ioe);
+            }
         }
     }//GEN-LAST:event_mniSaveActionPerformed
 
     private void mniDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mniDeleteActionPerformed
         DeleteDialog dd = new DeleteDialog(this, true);
         dd.setVisible(true);
-        DefaultListModel<ArtWork> lstModel = new DefaultListModel<ArtWork>();
-        for (ArtWork a: artworks) {
-            lstModel.addElement(a);
-        }
-        
-        lstArtWork.setModel(lstModel);
     }//GEN-LAST:event_mniDeleteActionPerformed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
-        this.dispose();
+        exitOnClose();
     }//GEN-LAST:event_formWindowClosing
 
     private void mniExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mniExitActionPerformed
-        
+        exitOnClose();
     }//GEN-LAST:event_mniExitActionPerformed
+
+    private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
+        Gson gson = new Gson();
+        try {
+            JsonReader reader = new JsonReader(new FileReader(jsonDirectory));
+
+            artworks = gson.fromJson(reader, LIST_OF_ARTWORK_TYPE);
+
+            for (ArtWork a : artworks) {
+                a.setImatge(imagesDirectory + a.getImatge());
+                artworksLstModel.addElement(a);
+            }
+
+            lstArtWork.setModel(artworksLstModel);
+        } catch (FileNotFoundException fnfe) {
+            System.err.println("Error loading artworks");
+        }
+    }//GEN-LAST:event_formWindowOpened
 
     /**
      * @param args the command line arguments
      */
+    private void exitOnClose() {
+        Gson gson = new Gson();
+        try {
+            JsonReader reader = new JsonReader(new FileReader(jsonDirectory));
+
+            ArrayList<ArtWork> comparar = gson.fromJson(reader, LIST_OF_ARTWORK_TYPE);
+
+            for (ArtWork a : comparar) {
+                a.setImatge(imagesDirectory + a.getImatge());
+            }
+
+            if (comparar.size() != artworks.size()) {
+                saveOnExit();
+            } else {
+                for(int i = 0; i < comparar.size(); i++) {
+                    if (!comparar.get(i).toString().equals(artworks.get(i).toString())) {
+                        saveOnExit();
+                        return;
+                    }
+                }
+                this.dispose();
+            }
+        } catch (FileNotFoundException fnfe) {
+            System.err.println("Error loading artworks");
+        }
+    }
+    
+    private void saveOnExit() {
+        SaveExitDialog sed = new SaveExitDialog(this, true);
+        sed.setVisible(true);
+        
+        switch(sed.action) {
+            case 0 -> {
+                return;
+            }
+            case 1 -> {
+                exiting = true;
+                mniSave.doClick();
+                this.dispose();
+                return;
+            }
+            case 2 -> {
+                this.dispose();
+            }
+        }
+    }
+    
     private void lstArtworksValueChanged(javax.swing.event.ListSelectionEvent evt) {
         try {
             ArtWork a = (ArtWork) lstArtWork.getSelectedValue();
             BufferedImage image = ImageIO.read(new File(a.getImatge()));
             lblImage.setIcon(resizImageIcon(image));
-        } catch(IOException ioe) {
+        } catch (IOException ioe) {
             System.err.println("Error in lstArtworksValueChanged");
             System.err.println(ioe);
         } catch (NullPointerException npe) {
-            
+
         }
     }
-    
+
     private ImageIcon resizImageIcon(BufferedImage originalImage) {
 
         int desiredHeight = 0;
@@ -273,31 +333,16 @@ public class MainForm extends javax.swing.JFrame {
         ImageIcon icon = new ImageIcon(outputImage);
         return icon;
     }
-    
+
     private void doubleClick() {
         dobleclick = true;
         update = true;
         ShowDialog sd = new ShowDialog(this, true);
         sd.setVisible(true);
+        dobleclick = false;
+        update = false;
     }
-    
-    private void loadArtworks() {
-        Gson gson = new Gson();
-        try {
-            JsonReader reader = new JsonReader(new FileReader(System.getProperty("user.home") + "\\AppData\\Local\\OpusList\\data\\obres.json"));
-            
-            artworks = gson.fromJson(reader, LIST_OF_ARTWORK_TYPE);
-            
-            for(ArtWork a: artworks) {
-                a.setImatge(imagesDirectory + a.getImatge());
-                artworksLstModel.addElement(a);
-            }
-            lstArtWork.setModel(artworksLstModel);
-        } catch (FileNotFoundException fnfe) {
-            System.err.println("Error loading artworks");
-        }
-    }
-    
+
     private void writeArtworks(JsonWriter writer) {
         try {
             ArrayList<ArtWork> newArtworks = new ArrayList<>();
@@ -306,11 +351,11 @@ public class MainForm extends javax.swing.JFrame {
                 writeArtwork(writer, a, newArtworks);
             });
             writer.endArray();
-            File folder = new File(System.getProperty("user.home") + "\\AppData\\Local\\OpusList\\images\\");
+            File folder = new File(imagesDirectory);
             findAllFilesInFolder(folder);
             artworks = newArtworks;
             DefaultListModel<ArtWork> listModel = new DefaultListModel<>();
-            for (ArtWork a: artworks) {
+            for (ArtWork a : artworks) {
                 a.setImatge(imagesDirectory + a.getImatge());
                 listModel.addElement(a);
             }
@@ -320,19 +365,18 @@ public class MainForm extends javax.swing.JFrame {
             System.err.println(ioe);
         }
     }
-    
+
     private void writeArtwork(JsonWriter writer, ArtWork a, ArrayList<ArtWork> newArtworks) {
         try {
-            String userFolder = System.getProperty("user.home");
             writer.beginObject();
             writer.name("registre").value(a.getRegistre());
             writer.name("titol").value(a.getTitol());
             writer.name("any").value(a.getAny());
             writer.name("format").value(a.getFormat());
             writer.name("autor").value(a.getAutor());
-            String absolutePath = userFolder + "\\AppData\\Local\\OpusList\\images\\" + a.getRegistre()+ ".jpg";
+            String absolutePath = imagesDirectory + a.getRegistre() + ".jpg";
             BufferedImage bufferedImage = ImageIO.read(new File(a.getImatge()));
-            a.setImatge(a.getRegistre()+ ".jpg");
+            a.setImatge(a.getRegistre() + ".jpg");
             File outputImage = new File(absolutePath);
             ImageIO.write(bufferedImage, "jpg", outputImage);
             writer.name("imatge").value(a.getImatge());
@@ -343,24 +387,24 @@ public class MainForm extends javax.swing.JFrame {
             System.err.println(ioe);
         }
     }
-    
+
     public void findAllFilesInFolder(File folder) {
         ArrayList<String> goodFiles = new ArrayList<>();
         for (File file : folder.listFiles()) {
-            for (ArtWork a: artworks) {
+            for (ArtWork a : artworks) {
                 if (file.getName().equals(a.getImatge())) {
                     goodFiles.add(file.getName());
                 }
             }
         }
-        
-        for (File file: folder.listFiles()) {
+
+        for (File file : folder.listFiles()) {
             if (!goodFiles.contains(file.getName())) {
                 file.delete();
             }
         }
     }
-    
+
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">

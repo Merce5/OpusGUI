@@ -22,6 +22,7 @@ public class UpdateDialog extends javax.swing.JDialog {
     public UpdateDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
+        txtRef.setText("");
         lblWarning.setVisible(false);
     }
 
@@ -72,8 +73,8 @@ public class UpdateDialog extends javax.swing.JDialog {
                     .addComponent(lblWarning, javax.swing.GroupLayout.PREFERRED_SIZE, 197, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(txtRef, javax.swing.GroupLayout.PREFERRED_SIZE, 337, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
-                .addComponent(btnSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(91, Short.MAX_VALUE))
+                .addComponent(btnSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(82, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -103,6 +104,7 @@ public class UpdateDialog extends javax.swing.JDialog {
             if (a.getRegistre().equals(reference)) {
                 mainForm.imagePath = a.getImatge();
                 sd.setVisible(true);
+                this.setVisible(false);
                 return;
             }
         }

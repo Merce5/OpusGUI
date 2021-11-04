@@ -4,6 +4,7 @@
  */
 package spdvi.dialogs;
 
+import java.awt.Color;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.*;
@@ -19,19 +20,21 @@ import spdvi.objects.ArtWork;
  */
 public class ShowDialog extends javax.swing.JDialog {
 
-    /**
-     * Creates new form ShowDialog
-     */
     private final MainForm mainForm = (MainForm) this.getParent();
     private JFileChooser fileChooser = new JFileChooser();
-    
+
     public ShowDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
+        lblError.setForeground(Color.red);
         if (mainForm.update) {
+            lblError.setVisible(false);
+            btnEnter.setText("Update");
             loadArtwork();
         } else {
+            lblError.setVisible(false);
             btnEnter.setText("Insert");
+            mainForm.imagePath = "src/spdvi/icons/no_image.jpg";
             try {
                 BufferedImage image = ImageIO.read(new File("src/spdvi/icons/no_image.jpg"));
                 lblImage.setIcon(resizImageIcon(image));
@@ -64,10 +67,17 @@ public class ShowDialog extends javax.swing.JDialog {
         lblImage = new javax.swing.JLabel();
         btnEnter = new javax.swing.JButton();
         btnSelectImage = new javax.swing.JButton();
+        lblError = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         lblReference.setText("Reference");
+
+        txtRef.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                txtRefKeyReleased(evt);
+            }
+        });
 
         lblAuthor.setText("Author");
 
@@ -93,11 +103,14 @@ public class ShowDialog extends javax.swing.JDialog {
             }
         });
 
+        lblError.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblError.setText("The reference already exists");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(lblAuthor, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -105,7 +118,7 @@ public class ShowDialog extends javax.swing.JDialog {
                     .addComponent(lblText, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(lblYear, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(lblFormat, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
+                .addGap(18, 18, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(txtRef, javax.swing.GroupLayout.PREFERRED_SIZE, 91, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(txtTitle, javax.swing.GroupLayout.PREFERRED_SIZE, 91, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -118,8 +131,10 @@ public class ShowDialog extends javax.swing.JDialog {
                     .addComponent(lblImage, javax.swing.GroupLayout.PREFERRED_SIZE, 190, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(107, 107, 107))
             .addGroup(layout.createSequentialGroup()
-                .addGap(156, 156, 156)
-                .addComponent(btnEnter, javax.swing.GroupLayout.PREFERRED_SIZE, 243, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(158, 158, 158)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(btnEnter, javax.swing.GroupLayout.DEFAULT_SIZE, 243, Short.MAX_VALUE)
+                    .addComponent(lblError, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -149,13 +164,15 @@ public class ShowDialog extends javax.swing.JDialog {
                             .addComponent(txtFormat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
-                        .addContainerGap(21, Short.MAX_VALUE)
+                        .addContainerGap(25, Short.MAX_VALUE)
                         .addComponent(lblImage, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(btnSelectImage)
-                        .addGap(39, 39, 39)))
+                        .addGap(34, 34, 34)))
+                .addComponent(lblError)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btnEnter)
-                .addGap(43, 43, 43))
+                .addGap(22, 22, 22))
         );
 
         pack();
@@ -163,6 +180,7 @@ public class ShowDialog extends javax.swing.JDialog {
 
     private void btnEnterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEnterActionPerformed
         if (mainForm.update) {
+            btnEnter.setEnabled(true);
             String ref = txtRef.getText();
             DefaultListModel<ArtWork> lstModel = new DefaultListModel<ArtWork>();
 
@@ -177,7 +195,7 @@ public class ShowDialog extends javax.swing.JDialog {
                 lstModel.addElement(a);
             }
             mainForm.lstArtWork.setModel(lstModel);
-            mainForm.update = false;
+            this.setVisible(false);
         } else {
             ArtWork a = new ArtWork(txtRef.getText(), txtTitle.getText(), txtYear.getText(), txtFormat.getText(), txtAuthor.getText(), mainForm.imagePath);
             mainForm.artworksLstModel.addElement(a);
@@ -192,18 +210,59 @@ public class ShowDialog extends javax.swing.JDialog {
         fileChooser.setAcceptAllFileFilterUsed(false);
         int returnOption = fileChooser.showOpenDialog(this);
         if (returnOption == JFileChooser.APPROVE_OPTION) {
-            mainForm.imagePath = fileChooser.getSelectedFile().getAbsolutePath(); 
+            mainForm.imagePath = fileChooser.getSelectedFile().getAbsolutePath();
         } else {
             mainForm.imagePath = "src/spdvi/icons/no_image.jpg";
         }
         try {
             BufferedImage image = ImageIO.read(new File(mainForm.imagePath));
             lblImage.setIcon(resizImageIcon(image));
-        } catch(IOException ioe) {
+        } catch (IOException ioe) {
             System.err.println("Error in btnSelectImage");
             System.err.println(ioe);
         }
     }//GEN-LAST:event_btnSelectImageActionPerformed
+
+    private void txtRefKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtRefKeyReleased
+        try {
+            if (String.valueOf(txtRef.getText().charAt(0) + txtRef.getText().charAt(1)).equals(String.valueOf('I' + 'B'))) {
+                lblError.setVisible(false);
+                btnEnter.setEnabled(true);
+                if (!mainForm.update) {
+                    for (ArtWork a : mainForm.artworks) {
+                        if (txtRef.getText().equals(a.getRegistre())) {
+                            btnEnter.setEnabled(false);
+                            lblError.setText("The reference already exists");
+                            lblError.setVisible(true);
+                            return;
+                        } else {
+                            btnEnter.setEnabled(true);
+                            lblError.setVisible(false);
+                        }
+                    }
+                } else {
+                    for (ArtWork a : mainForm.artworks) {
+                        if (!txtRef.getText().equals(a.getRegistre())) {
+                            btnEnter.setEnabled(false);
+                            lblError.setText("The current reference does not exist, please insert before update");
+                            lblError.setVisible(true);
+                        } else {
+                            btnEnter.setEnabled(true);
+                            lblError.setVisible(false);
+                            return;
+                        }
+                    }
+                }
+            } else {
+                lblError.setVisible(true);
+                btnEnter.setEnabled(false);
+                lblError.setText("The reference must start with \"IB\"");
+            }
+        } catch (StringIndexOutOfBoundsException siobe) {
+
+        }
+
+    }//GEN-LAST:event_txtRefKeyReleased
 
     /**
      * @param args the command line arguments
@@ -240,7 +299,6 @@ public class ShowDialog extends javax.swing.JDialog {
             System.err.println("Error in loadArtwork (ShowDialog)");
             System.err.println(ioe);
         }
-
     }
 
     private ImageIcon resizImageIcon(BufferedImage originalImage) {
@@ -302,6 +360,7 @@ public class ShowDialog extends javax.swing.JDialog {
     private javax.swing.JButton btnEnter;
     private javax.swing.JButton btnSelectImage;
     private javax.swing.JLabel lblAuthor;
+    private javax.swing.JLabel lblError;
     private javax.swing.JLabel lblFormat;
     private javax.swing.JLabel lblImage;
     private javax.swing.JLabel lblReference;

@@ -6,12 +6,10 @@ package spdvi.dialogs;
 
 import java.awt.Image;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
-import javax.swing.UIManager;
+import javax.swing.*;
 import spdvi.MainForm;
 import spdvi.objects.ArtWork;
 
@@ -25,9 +23,17 @@ public class DeleteDialog extends javax.swing.JDialog {
      * Creates new form DeleteDialog
      */
     private final MainForm mainForm = (MainForm) this.getParent();
+    JComboBox<ArtWork> cmbArtwork;
     public DeleteDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
+        cmbArtwork = new JComboBox<ArtWork>();
+        jScrollPane1.setViewportView(cmbArtwork);
+        cmbArtwork.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cmbArtworkActionPerformed(evt);
+            }
+        });
         loadArtworks();
     }
 
@@ -42,9 +48,8 @@ public class DeleteDialog extends javax.swing.JDialog {
 
         btnDelete = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
-        cmbArtworks = new javax.swing.JComboBox<>();
-        lblArtwork = new javax.swing.JLabel();
         lblImage = new javax.swing.JLabel();
+        jScrollPane1 = new javax.swing.JScrollPane();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -59,16 +64,6 @@ public class DeleteDialog extends javax.swing.JDialog {
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("Select the files that you want to delete.");
 
-        cmbArtworks.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cmbArtworksActionPerformed(evt);
-            }
-        });
-
-        lblArtwork.setFont(new java.awt.Font("Corbel Light", 1, 14)); // NOI18N
-        lblArtwork.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lblArtwork.setText("Text goes here");
-
         lblImage.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -76,71 +71,71 @@ public class DeleteDialog extends javax.swing.JDialog {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(36, 36, 36)
+                .addGap(61, 61, 61)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-                    .addComponent(lblArtwork, javax.swing.GroupLayout.PREFERRED_SIZE, 478, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(cmbArtworks, javax.swing.GroupLayout.PREFERRED_SIZE, 401, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel1))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 45, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-                    .addComponent(btnDelete, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(lblImage, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(29, 29, 29))
+                    .addComponent(jLabel1)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 428, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnDelete, javax.swing.GroupLayout.PREFERRED_SIZE, 165, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 66, Short.MAX_VALUE)
+                .addComponent(lblImage, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(33, 33, 33))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(49, 49, 49)
-                        .addComponent(jLabel1)
-                        .addGap(45, 45, 45)
-                        .addComponent(cmbArtworks, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(lblArtwork, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addContainerGap(23, Short.MAX_VALUE)
-                        .addComponent(lblImage, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGap(49, 49, 49)
+                .addComponent(jLabel1)
+                .addGap(31, 31, 31)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(btnDelete)
-                .addGap(21, 21, 21))
+                .addGap(0, 0, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(37, Short.MAX_VALUE)
+                .addComponent(lblImage, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(32, 32, 32))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
-        String a = (String) cmbArtworks.getSelectedItem();    
+        ArtWork a = (ArtWork) cmbArtwork.getSelectedItem();    
         ArrayList<ArtWork> auxList = new ArrayList<>();
+        DefaultListModel<ArtWork> lstModel = new DefaultListModel<ArtWork>();
+        mainForm.artworks.remove(a);
         for(ArtWork art: mainForm.artworks) {
-            if(!a.equals(art.getRegistre())) {
-                auxList.add(art);
-            }
+            auxList.add(art);
+            lstModel.addElement(art);
         }
         mainForm.artworks = auxList;
+        mainForm.artworksLstModel = lstModel;
+        mainForm.lstArtWork.setModel(mainForm.artworksLstModel);
         loadArtworks();
     }//GEN-LAST:event_btnDeleteActionPerformed
-
-    private void cmbArtworksActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbArtworksActionPerformed
+    private void cmbArtworkActionPerformed(java.awt.event.ActionEvent evt) {                                           
         for(ArtWork a: mainForm.artworks) {
-            if(a.getRegistre().equals(cmbArtworks.getSelectedItem())) {
-                lblArtwork.setText(a.toString());
+            if(a.toString().equals(cmbArtwork.getSelectedItem().toString())) {
                 try {
                     BufferedImage image = ImageIO.read(new File(a.getImatge()));
                     lblImage.setIcon(resizImageIcon(image));
                 } catch(IOException ioe) {
-                    System.err.println("Error in btnSelectImage");
+                    System.err.println("Error in cmbArtworkActionPerformed");
                     System.err.println(ioe);
                 }
             }   
         }
-    }//GEN-LAST:event_cmbArtworksActionPerformed
-  
+    }      
+
     private void loadArtworks() {
-        cmbArtworks.removeAllItems();
+        DefaultListModel<ArtWork> newList = new DefaultListModel<>();
+        DefaultComboBoxModel<ArtWork> cmbModel = new DefaultComboBoxModel<>();
         for(ArtWork art : mainForm.artworks) {
-            cmbArtworks.addItem(art.getRegistre());
+            cmbModel.addElement(art);
+            newList.addElement(art);
         }
+        mainForm.lstArtWork.setModel(newList);
+        cmbArtwork.setModel(cmbModel);
     }
     
     private ImageIcon resizImageIcon(BufferedImage originalImage) {
@@ -202,9 +197,8 @@ public class DeleteDialog extends javax.swing.JDialog {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnDelete;
-    private javax.swing.JComboBox<String> cmbArtworks;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel lblArtwork;
+    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel lblImage;
     // End of variables declaration//GEN-END:variables
 }

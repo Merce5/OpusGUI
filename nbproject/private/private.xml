@@ -3,9 +3,11 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/merce/Documents/Interficies/T3/OposGUI/src/spdvi/dialogs/ShowDialog.java</file>
-            <file>file:/C:/Users/merce/Documents/Interficies/T3/OposGUI/src/spdvi/dialogs/UpdateDialog.java</file>
-            <file>file:/C:/Users/merce/Documents/Interficies/T3/OposGUI/src/spdvi/MainForm.java</file>
+            <file>file:/D:/1.Clase/Interficies/OposGUI/src/spdvi/dialogs/ShowDialog.java</file>
+            <file>file:/D:/1.Clase/Interficies/OposGUI/src/spdvi/dialogs/UpdateDialog.java</file>
+            <file>file:/D:/1.Clase/Interficies/OposGUI/src/spdvi/objects/ArtWork.java</file>
+            <file>file:/D:/1.Clase/Interficies/OposGUI/src/spdvi/MainForm.java</file>
+            <file>file:/D:/1.Clase/Interficies/OposGUI/src/spdvi/dialogs/DeleteDialog.java</file>
         </group>
     </open-files>
 </project-private>
