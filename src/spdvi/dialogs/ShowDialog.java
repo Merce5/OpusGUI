@@ -39,6 +39,7 @@ public class ShowDialog extends javax.swing.JDialog {
         } else {
             //Si no estamos actualizando al iniciarse solo tendrá que cambiar el texto del botón y poner la foto por defecto
             btnEnter.setText("Insert");
+            btnEnter.setEnabled(false);
             mainForm.imagePath = "src/spdvi/icons/no_image.jpg";
             try {
                 BufferedImage image = ImageIO.read(new File("src/spdvi/icons/no_image.jpg"));
